@@ -1,4 +1,5 @@
 import psycopg2
+import sys
 import requests
 from bs4 import BeautifulSoup
 import psycopg2 as psy
@@ -51,7 +52,6 @@ def urlchanger_week(url, index):
 
 
 def getall(url,index):
-    flag1 = True
 
     result = getsite(url)
     soup = BeautifulSoup(result.text, 'lxml')
@@ -65,24 +65,21 @@ def getall(url,index):
     coach1, coach2 = getCoaches(soup)
     referee = getRef(soup)
     d = details.split(',')
-    arrAsText = f"{team1}, {halftime}, {team2}, {fulltime}, {details},{goalstats}, {coach1}, {coach2}, {referee}, {str(goalstats).strip()})"
     dct = {'takim1':team1, 'ms':fulltime, 'takim2':team2, 'iy':fulltime, 'tarih':d[0], 'lig':d[1], 'hafta':d[2], 'saat':d[3], 'stadyum':d[4], 'goller':goalstats, 'tekadam1':coach1, 'tekadam2':coach2, 'hakem':referee, 'link':url}
-    arr = arrAsText.split(',')
     if len(fulltime) < 2 or fulltime is None:
         return
     with con.cursor() as cur:
         lig = leagues_sql[index]
         fix = fikstur_sql[index]
 
-        if flag1:
-            cmd2 = f'Insert into {lig} values($${dct["takim1"]}$$,$${dct["ms"]}$$,$${dct["takim2"]}$$,$${dct["iy"]}$$,\'{dct["tarih"]}\',$${dct["lig"]}$$,\'{dct["hafta"]}\',$${dct["saat"]}$$,$${dct["stadyum"]}$$,$${dct["goller"]}$$,$${dct["tekadam1"]}$$,$${dct["tekadam2"]}$$,$${dct["hakem"]}$$,\'{dct["link"]}\')'
-            cmd3 = f'DELETE FROM {fix} where link = $${dct["link"]}$$'
-            try:
-                cur.execute(cmd2)
-            except psycopg2.errors.UniqueViolation:
-                pass
-            cur.execute(cmd3)
-        con.commit()
+        cmd2 = f'Insert into {lig} values($${dct["takim1"]}$$,$${dct["ms"]}$$,$${dct["takim2"]}$$,$${dct["iy"]}$$,\'{dct["tarih"]}\',$${dct["lig"]}$$,\'{dct["hafta"]}\',$${dct["saat"]}$$,$${dct["stadyum"]}$$,$${dct["goller"]}$$,$${dct["tekadam1"]}$$,$${dct["tekadam2"]}$$,$${dct["hakem"]}$$,\'{dct["link"]}\')'
+        cmd3 = f'DELETE FROM {fix} where takim1 = $${dct["takim1"]}$$ and takim2 = $${dct["takim2"]}$$'
+        try:
+            cur.execute(cmd2)
+        except psycopg2.errors.UniqueViolation:
+            con.rollback()
+        cur.execute(cmd3)
+    con.commit()
 
 def prettylink(semiurl):
     urltolist = (semiurl.split('\\'))
@@ -213,7 +210,7 @@ def urlChangerYearly(url, code):
 
 def getLastWeek(index):
     fix = fikstur_sql[index]
-    cmd = f"select distinct(hafta) from {fix} where (tarih + saat)< (now() - interval '3 hours') and lig = '{league_names[index]}' order by hafta asc"
+    cmd = f"select distinct(hafta) from {fix} where (tarih + saat)< (now() - interval '3 hours')  order by hafta asc"
     with con.cursor() as cur:
         cur.execute(cmd)
         return cur.fetchall()
