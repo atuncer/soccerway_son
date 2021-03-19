@@ -14,7 +14,7 @@ con = psy.connect(
 leagues = ['https://uk.soccerway.com/national/england/premier-league/','https://uk.soccerway.com/national/italy/serie-a/','https://uk.soccerway.com/national/spain/primera-division/','https://uk.soccerway.com/national/germany/bundesliga/','https://uk.soccerway.com/national/france/ligue-1/','https://uk.soccerway.com/national/turkey/super-lig/']
 leagues_sql = ['lig_premier','lig_seriea','lig_laliga','lig_bundesliga','lig_ligue1','lig_superlig']
 fikstur_sql = ['fikstur_premier','fikstur_seriea','fikstur_laliga','fikstur_bundesliga','fikstur_ligue1','fikstur_superlig']
-league_names = ['Premier League','Serie A ','La Liga,','La Liga','Ligue 1','Süper Lig']
+league_names = ['Premier League','Serie A ','La Liga,','Bundesliga','Ligue 1','Süper Lig']
 
 
 
@@ -210,7 +210,7 @@ def urlChangerYearly(url, code):
 
 def getLastWeek(index):
     fix = fikstur_sql[index]
-    cmd = f"select distinct(hafta) from {fix} where (tarih + saat)< (now() - interval '3 hours')  order by hafta asc"
+    cmd = f"select distinct(hafta) from {fix} where tarih < now()  order by hafta asc"
     with con.cursor() as cur:
         cur.execute(cmd)
         return cur.fetchall()
