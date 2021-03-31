@@ -51,8 +51,7 @@ async def main():
 
 
 async def fetch(session: aiohttp.ClientSession, url: str, n: int):
-    headers = {
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36'}
+    headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36'}
     async with session.get(url, headers=headers) as result:
         print(f"Requested: {url}")
         txt = await result.text()

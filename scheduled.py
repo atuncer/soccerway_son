@@ -1,5 +1,4 @@
 import psycopg2
-import sys
 import requests
 from bs4 import BeautifulSoup
 import psycopg2 as psy
