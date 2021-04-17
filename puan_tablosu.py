@@ -48,7 +48,12 @@ def logos(x,z):
 
 
 def inner(x, z):
-    result11 = f'TRUNCATE TABLE {puan[z]}'
+    result11 = ''
+
+    with con.cursor() as cur:
+        cur.execute(f'TRUNCATE TABLE {puan[z]}')
+        con.commit()
+
     for i in range(0, 30):
         tr = x.find_all('tr')
         result11 += f"insert into {puan[z]} values("
