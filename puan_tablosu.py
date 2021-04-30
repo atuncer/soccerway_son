@@ -13,6 +13,7 @@ con = psy.connect(
 
 url = ['/england/premier-league/20202021/regular-season/r59136/', '/italy/serie-a/20202021/regular-season/r59286/', '/france/ligue-1/20202021/regular-season/r58178/', '/germany/bundesliga/20202021/regular-season/r58871/', '/spain/primera-division/20202021/regular-season/r59097/', '/turkey/super-lig/20202021/regular-season/r59187/']
 puan = ["puan_premier", "puan_seriea", "puan_ligue1", "puan_bundesliga", "puan_laliga", "puan_superlig"]
+ligler = ['premier','seriea','laliga','bundesliga','ligue1','superlig']
 
 headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36'}
 
@@ -34,6 +35,14 @@ def gettable():
 
         inner(x, z)
         #logos(x, z)
+    with con.cursor() as cur:
+        cur.execute("TRUNCATE TABLE fikstur_all")
+        for lig in puan:
+            cmd = f"INSERT INTO puan_all (SELECT * FROM {lig})"
+            cur.execute(cmd)
+        con.commit()
+
+
 
 
 def logos(x,z):
@@ -75,7 +84,7 @@ def inner(x, z):
             elif j != 1:
 
                 result11 += td[j].text + ','
-        result11 += ")"
+        result11 += f",$${ligler[z]}$$)"
         with con.cursor() as cur:
             cur.execute(result11)
             con.commit()

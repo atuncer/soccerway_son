@@ -11,10 +11,6 @@ con = psy.connect(
 )
 
 leagues = ['https://uk.soccerway.com/national/england/premier-league/','https://uk.soccerway.com/national/italy/serie-a/','https://uk.soccerway.com/national/spain/primera-division/','https://uk.soccerway.com/national/germany/bundesliga/','https://uk.soccerway.com/national/france/ligue-1/','https://uk.soccerway.com/national/turkey/super-lig/']
-leagues_sql = ['lig_premier','lig_seriea','lig_laliga','lig_bundesliga','lig_ligue1','lig_superlig']
-fikstur_sql = ['fikstur_premier','fikstur_seriea','fikstur_laliga','fikstur_bundesliga','fikstur_ligue1','fikstur_superlig']
-league_names = ['Premier League','Serie A ','La Liga,','Bundesliga','Ligue 1','Süper Lig']
-
 
 
 def getsite(url):
@@ -50,7 +46,7 @@ def urlchanger_week(url, index):
                 return url[:y[1]] + (url[y[1]:y[1]+3]) + str(index) + url[y[0]:] #TODO eksiyi çıkar
 
 
-def getall(url,index):
+def getall(url):
 
     result = getsite(url)
     soup = BeautifulSoup(result.text, 'lxml')
@@ -68,16 +64,19 @@ def getall(url,index):
     if len(fulltime) < 2 or fulltime is None:
         return
     with con.cursor() as cur:
-        lig = leagues_sql[index]
-        fix = fikstur_sql[index]
+        cmd1 = f"SELECT COUNT(*) FROM butun_lig_fikstur where takim1 = $${dct['takim1']}$$ and takim2 = $${dct['takim2']}$$ and tarih > date('2021-01-01')"
+        cur.execute(cmd1)
+        x = cur.fetchall()[0][0]
+        print(cmd1)
+        if x == 1:
+            cmd2 = f'Insert into butun_lig_fikstur values($${dct["takim1"]}$$,$${dct["ms"]}$$,$${dct["takim2"]}$$,$${dct["iy"]}$$,\'{dct["tarih"]}\',$${dct["lig"]}$$,\'{dct["hafta"]}\',$${dct["saat"]}$$,$${dct["stadyum"]}$$,$${dct["goller"]}$$,$${dct["tekadam1"]}$$,$${dct["tekadam2"]}$$,$${dct["hakem"]}$$,\'{dct["link"]}\')'
+            cmd3 = f'DELETE FROM butun_lig_fikstur where takim1 = $${dct["takim1"]}$$ and takim2 = $${dct["takim2"]}$$'
+            cur.execute(cmd3)
+            try:
+                cur.execute(cmd2)
+            except psycopg2.errors.UniqueViolation:
+                con.rollback()
 
-        cmd2 = f'Insert into {lig} values($${dct["takim1"]}$$,$${dct["ms"]}$$,$${dct["takim2"]}$$,$${dct["iy"]}$$,\'{dct["tarih"]}\',$${dct["lig"]}$$,\'{dct["hafta"]}\',$${dct["saat"]}$$,$${dct["stadyum"]}$$,$${dct["goller"]}$$,$${dct["tekadam1"]}$$,$${dct["tekadam2"]}$$,$${dct["hakem"]}$$,\'{dct["link"]}\')'
-        cmd3 = f'DELETE FROM {fix} where takim1 = $${dct["takim1"]}$$ and takim2 = $${dct["takim2"]}$$'
-        try:
-            cur.execute(cmd2)
-        except psycopg2.errors.UniqueViolation:
-            con.rollback()
-        cur.execute(cmd3)
     con.commit()
 
 def prettylink(semiurl):
@@ -208,14 +207,13 @@ def urlChangerYearly(url, code):
 
 
 def getLastWeek(index):
-    fix = fikstur_sql[index]
-    cmd = f"select distinct(hafta) from {fix} where tarih < now()  order by hafta asc"
+    cmd = f"select distinct(hafta) from butun_lig_fikstur where tarih < now() order by hafta asc"
     with con.cursor() as cur:
         cur.execute(cmd)
         return cur.fetchall()
 
 
-def mainloop(url,index):
+def mainloop(url, index):
     try:
         glw = getLastWeek(index)
         ignored = glw[0]  # glw[0]ın varlığını kontrol etmek için bu satır
@@ -232,13 +230,12 @@ def mainloop(url,index):
         tbody = soup.find('tbody')
         divs = tbody.find_all("div")
 
-        print("week " + str(week[0]))
 
         for div in divs:
             links = div.find_all('a')[1]['href']
             link = ("https://uk.soccerway.com" + prettylink(links[2:-1]))
             print(link)
-            getall(link, index)
+            getall(link)
 
 
 if __name__ == "__main__":
