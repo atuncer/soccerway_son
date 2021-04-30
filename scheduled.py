@@ -207,7 +207,7 @@ def urlChangerYearly(url, code):
 
 
 def getLastWeek(index):
-    cmd = f"select distinct(hafta) from butun_lig_fikstur where tarih < now() order by hafta asc"
+    cmd = f"select distinct(hafta) from butun_lig_fikstur where tarih < now() and $${0}$$ ~ lig and ms is NULL order by hafta asc"
     with con.cursor() as cur:
         cur.execute(cmd)
         return cur.fetchall()

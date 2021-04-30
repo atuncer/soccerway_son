@@ -1,6 +1,4 @@
 import requests
-import csv
-from lxml import html
 from bs4 import BeautifulSoup
 import psycopg2 as psy
 con = psy.connect(

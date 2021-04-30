@@ -177,13 +177,6 @@ def getRef(soup):
     return ref
 
 
-def saver():
-    try:
-        book.save('bundesliga.xlsx')
-    except PermissionError:
-        print("Close the file")
-        time.sleep(20)
-        saver()
 
 
 if __name__ == '__main__':
@@ -194,9 +187,6 @@ if __name__ == '__main__':
 
     a = OrderedDict(sorted(a.items()))
     for i in range(len(a)):
-        try:
-            sheet.append(a[i])
-        except KeyError:
-            sheet.append(['error', ''])
-            continue
-    saver()
+        print("")
+        # add to db
+
